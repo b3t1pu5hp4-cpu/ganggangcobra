@@ -302,7 +302,7 @@ export default function RoomPage() {
 
           <div className="relative w-full max-w-sm aspect-[4/5] bg-[#171310] rounded-[3px] overflow-hidden border border-brass/25 shadow-[0_20px_60px_rgba(0,0,0,0.5)]">
             {camReady ? (
-              <video ref={videoRef} muted playsInline className="w-full h-full object-cover scale-x-[-1]" style={{ filter: filter.css }} />
+              <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover scale-x-[-1]" style={{ filter: filter.css }} />
             ) : (
               <div className="w-full h-full flex items-center justify-center text-brass/40 flex-col gap-2">
                 <Camera size={28} />
