@@ -75,17 +75,24 @@ export default function RoomPage() {
   // camera
   useEffect(() => {
     let stream;
-    navigator.mediaDevices
-      ?.getUserMedia({ video: { facingMode: "user" }, audio: false })
-      .then((s) => {
-        stream = s;
-        if (videoRef.current) {
-          videoRef.current.srcObject = s;
+    navigator.mediaDevices?.getUserMedia({
+      video: { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 720 } },
+      audio: false
+    })
+    .then((s) => {
+      stream = s;
+      if (videoRef.current) {
+        videoRef.current.srcObject = s;
+        videoRef.current.onloadedmetadata = () => {
           videoRef.current.play().catch(() => {});
-        }
-        setCamReady(true);
-      })
-      .catch(() => setError("Your camera is needed to enter the booth."));
+        };
+      }
+      setCamReady(true);
+    })
+    .catch((err) => {
+      console.error(err);
+      setError("Your camera is needed to enter the booth.");
+    });
     return () => stream?.getTracks().forEach((t) => t.stop());
   }, []);
 
@@ -301,14 +308,20 @@ export default function RoomPage() {
           </div>
 
           <div className="relative w-full max-w-sm aspect-[4/5] bg-[#171310] rounded-[3px] overflow-hidden border border-brass/25 shadow-[0_20px_60px_rgba(0,0,0,0.5)]">
-            {camReady ? (
-              <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover scale-x-[-1]" style={{ filter: filter.css }} />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center text-brass/40 flex-col gap-2">
-                <Camera size={28} />
-                <span className="font-mono text-[10px] tracking-widest uppercase">Loading camera…</span>
-              </div>
-            )}
+            <video
+  ref={videoRef}
+  autoPlay
+  playsInline
+  muted
+  className={"w-full h-full object-cover scale-x-[-1] " + (camReady ? "block" : "hidden")}
+  style={{ filter: filter.css }}
+/>
+{!camReady && (
+  <div className="w-full h-full flex items-center justify-center text-brass/40 flex-col gap-2">
+    <Camera size={28} />
+    <span className="font-mono text-[10px] tracking-widest uppercase">Loading camera...</span>
+  </div>
+)}
             {phase === "countdown" && (
               <div className="absolute inset-0 flex items-center justify-center bg-black/30">
                 <span className="font-display text-8xl">{countLeft}</span>
