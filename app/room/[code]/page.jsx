@@ -58,6 +58,7 @@ export default function RoomPage() {
   const [theme, setTheme] = useState(STRIP_THEMES[1]);
   const [error, setError] = useState(null);
   const [camReady, setCamReady] = useState(false);
+  const [mediaStream, setMediaStream] = useState(null);
 
   const channelRef = useRef(null);
   const videoRef = useRef(null);
@@ -74,27 +75,39 @@ export default function RoomPage() {
 
   // camera
   useEffect(() => {
-    let stream;
-    navigator.mediaDevices?.getUserMedia({
-      video: { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 720 } },
-      audio: false
-    })
-    .then((s) => {
-      stream = s;
-      if (videoRef.current) {
-        videoRef.current.srcObject = s;
-        videoRef.current.onloadedmetadata = () => {
-          videoRef.current.play().catch(() => {});
+    let activeStream;
+    async function startCam() {
+      try {
+        const constraints = {
+          video: { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 720 } },
+          audio: false
         };
+        let s;
+        try {
+          s = await navigator.mediaDevices.getUserMedia(constraints);
+        } catch (e) {
+          s = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+        }
+        activeStream = s;
+        setMediaStream(s);
+        setCamReady(true);
+      } catch (err) {
+        console.error(err);
+        setError("Your camera is needed to enter the booth.");
       }
-      setCamReady(true);
-    })
-    .catch((err) => {
-      console.error(err);
-      setError("Your camera is needed to enter the booth.");
-    });
-    return () => stream?.getTracks().forEach((t) => t.stop());
+    }
+    startCam();
+    return () => {
+      activeStream?.getTracks().forEach(t => t.stop());
+    };
   }, []);
+
+  useEffect(() => {
+    if (videoRef.current && mediaStream) {
+      videoRef.current.srcObject = mediaStream;
+      videoRef.current.play().catch(() => {});
+    }
+  }, [mediaStream, phase]);
 
   const captureFrame = useCallback(async () => {
     const canvas = canvasRef.current;
