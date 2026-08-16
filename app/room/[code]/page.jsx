@@ -212,13 +212,21 @@ export default function RoomPage() {
         return arr;
       });
       const path = `${code}/${r}/${myId}.jpg`;
-      await supabase.storage.from(SHOTS_BUCKET).upload(path, blob, { upsert: true, contentType: "image/jpeg" });
-      const { data } = supabase.storage.from(SHOTS_BUCKET).getPublicUrl(path);
-      channelRef.current?.send({
-        type: "broadcast",
-        event: "shot_ready",
-        payload: { participantId: myId, round: r, url: data.publicUrl },
-      });
+      let finalUrl = dataUrl;
+    try {
+      const uploadRes = await supabase.storage.from(SHOTS_BUCKET).upload(path, blob, { upsert: true, contentType: "image/jpeg" });
+      if (!uploadRes.error) {
+        const { data } = supabase.storage.from(SHOTS_BUCKET).getPublicUrl(path);
+        if (data?.publicUrl) finalUrl = data.publicUrl;
+      }
+    } catch (e) {
+      console.warn("Storage upload fallback to dataUrl", e);
+    }
+    channelRef.current?.send({
+      type: "broadcast",
+      event: "shot_ready",
+      payload: { participantId: myId, round: r, url: finalUrl },
+    });
       setTimeout(() => setPhase("preview"), 250);
     },
     [captureFrame, code, myId]
