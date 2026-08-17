@@ -1,4 +1,54 @@
 
+function applyCanvasFilter(ctx, width, height, type) {
+  if (!type || type === "none") return;
+  const imgData = ctx.getImageData(0, 0, width, height);
+  const d = imgData.data;
+  for (let i = 0; i < d.length; i += 4) {
+    const r = d[i], g = d[i+1], b = d[i+2];
+    if (type === "bw") {
+      const v = 0.299 * r + 0.587 * g + 0.114 * b;
+      d[i] = v; d[i+1] = v; d[i+2] = v;
+    } else if (type === "sepia") {
+      d[i] = Math.min(255, r * 0.393 + g * 0.769 + b * 0.189);
+      d[i+1] = Math.min(255, r * 0.349 + g * 0.686 + b * 0.168);
+      d[i+2] = Math.min(255, r * 0.272 + g * 0.534 + b * 0.131);
+    } else if (type === "vintage") {
+      d[i] = Math.min(255, r * 1.1 + 10);
+      d[i+1] = Math.min(255, g * 0.95 + 10);
+      d[i+2] = Math.min(255, b * 0.8);
+    } else if (type === "warm") {
+      d[i] = Math.min(255, r * 1.05 + 5);
+      d[i+2] = Math.max(0, b * 0.95);
+    }
+  }
+  ctx.putImageData(imgData, 0, 0);
+}
+
+function drawFilterOverlay(ctx, overlayType, width, height) {
+  if (!overlayType) return;
+  ctx.save();
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+
+  if (overlayType === "dog") {
+    ctx.font = Math.round(width * 0.32) + "px sans-serif";
+    ctx.fillText("🐶", width * 0.5, height * 0.22);
+    ctx.font = Math.round(width * 0.18) + "px sans-serif";
+    ctx.fillText("👅", width * 0.5, height * 0.62);
+  } else if (overlayType === "fox") {
+    ctx.font = Math.round(width * 0.32) + "px sans-serif";
+    ctx.fillText("🦊", width * 0.5, height * 0.22);
+  } else if (overlayType === "hearts") {
+    ctx.font = Math.round(width * 0.2) + "px sans-serif";
+    ctx.fillText("👑 💖 👑", width * 0.5, height * 0.18);
+  } else if (overlayType === "cool") {
+    ctx.font = Math.round(width * 0.35) + "px sans-serif";
+    ctx.fillText("🕶️", width * 0.5, height * 0.42);
+  }
+  ctx.restore();
+}
+
+
 function drawFilterOverlay(ctx, overlayType, width, height) {
   if (!overlayType) return;
   ctx.save();
@@ -139,7 +189,7 @@ export default function RoomPage() {
     const canvas = canvasRef.current || document.createElement("canvas");
     canvas.width = 480;
     canvas.height = 560;
-    const ctx = canvas.getContext("2d");
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
     const video = videoRef.current;
 
     const hasVideo = video && (video.readyState >= 2 || video.videoWidth > 0);
@@ -148,23 +198,16 @@ export default function RoomPage() {
       ctx.save();
       ctx.translate(canvas.width, 0);
       ctx.scale(-1, 1);
-      if (filter?.css && filter.css !== "none") {
-        ctx.filter = filter.css;
-      }
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
       ctx.restore();
-      if (typeof drawFilterOverlay === "function" && filter?.overlay) {
-        drawFilterOverlay(ctx, filter.overlay, canvas.width, canvas.height);
-      } === "function" && filter?.overlay) {
+      
+      applyCanvasFilter(ctx, canvas.width, canvas.height, filter?.filterType);
+      if (filter?.overlay) {
         drawFilterOverlay(ctx, filter.overlay, canvas.width, canvas.height);
       }
     } else {
-      ctx.fillStyle = "#221c17";
+      ctx.fillStyle = "#171310";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
-      ctx.fillStyle = "#e0c9a6";
-      ctx.font = "24px sans-serif";
-      ctx.textAlign = "center";
-      ctx.fillText("📷 No Signal", canvas.width / 2, canvas.height / 2);
     }
 
     const dataUrl = canvas.toDataURL("image/jpeg", 0.92);
@@ -394,6 +437,29 @@ export default function RoomPage() {
   className={"w-full h-full object-cover scale-x-[-1] " + (camReady ? "block" : "hidden")}
   style={{ filter: filter.css }}
 />
+<div className="live-sticker-overlay">
+              {filter?.overlay === "dog" && (
+                <div className="absolute inset-0 pointer-events-none flex flex-col items-center justify-between py-6 z-20">
+                  <span className="text-6xl">🐶</span>
+                  <span className="text-4xl mb-12">👅</span>
+                </div>
+              )}
+              {filter?.overlay === "fox" && (
+                <div className="absolute inset-0 pointer-events-none flex flex-col items-center justify-start pt-6 z-20">
+                  <span className="text-6xl">🦊</span>
+                </div>
+              )}
+              {filter?.overlay === "hearts" && (
+                <div className="absolute inset-0 pointer-events-none flex items-start justify-center pt-5 z-20">
+                  <span className="text-4xl animate-bounce">👑 💖 👑</span>
+                </div>
+              )}
+              {filter?.overlay === "cool" && (
+                <div className="absolute inset-0 pointer-events-none flex items-center justify-center z-20">
+                  <span className="text-7xl">🕶️</span>
+                </div>
+              )}
+</div>
 {!camReady && (
   <div className="w-full h-full flex items-center justify-center text-brass/40 flex-col gap-2">
     <Camera size={28} />
