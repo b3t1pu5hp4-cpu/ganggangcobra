@@ -271,10 +271,24 @@ export default function RoomPage() {
 
   useEffect(() => {
     if (phase === "developing") {
-      compositeStrip(roundOrderRef.current, shotUrls, { theme: theme.id }).then((url) => {
-        setFinalStripUrl(url);
-        setPhase("final");
-      });
+      const mergedShotUrls = { ...shotUrls, [myId]: myShots };
+      const rawIds = roundOrderRef.current?.length
+        ? roundOrderRef.current
+        : Object.keys(participants).length
+        ? Object.keys(participants)
+        : [myId];
+      const pIds = Array.from(new Set(rawIds.filter(Boolean)));
+      if (!pIds.includes(myId)) pIds.unshift(myId);
+
+      compositeStrip(pIds, mergedShotUrls, { theme: theme.id })
+        .then((url) => {
+          setFinalStripUrl(url);
+          setPhase("final");
+        })
+        .catch((err) => {
+          console.error("Composite strip failed:", err);
+          setPhase("final");
+        });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase]);
@@ -394,7 +408,10 @@ export default function RoomPage() {
                 key={t.id}
                 onClick={async () => {
                   setTheme(t);
-                  const url = await compositeStrip(roundOrderRef.current, shotUrls, { theme: t.id });
+                  const mergedShotUrls = { ...shotUrls, [myId]: myShots };
+              const rawIds = roundOrderRef.current?.length ? roundOrderRef.current : Object.keys(participants);
+              const pIds = Array.from(new Set([myId, ...rawIds].filter(Boolean)));
+              const url = await compositeStrip(pIds, mergedShotUrls, { theme: t.id });
                   setFinalStripUrl(url);
                 }}
                 className={`shrink-0 px-3 py-1.5 rounded-full font-mono text-[9px] uppercase tracking-widest border ${
