@@ -120,14 +120,16 @@ export default function RoomPage() {
 
     if (hasVideo) {
       ctx.save();
+      ctx.translate(canvas.width, 0);
+      ctx.scale(-1, 1);
       if (filter?.css && filter.css !== "none") {
         ctx.filter = filter.css;
       }
-      ctx.translate(canvas.width, 0);
-      ctx.scale(-1, 1);
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
       ctx.restore();
       if (typeof drawFilterOverlay === "function" && filter?.overlay) {
+        drawFilterOverlay(ctx, filter.overlay, canvas.width, canvas.height);
+      } === "function" && filter?.overlay) {
         drawFilterOverlay(ctx, filter.overlay, canvas.width, canvas.height);
       }
     } else {
