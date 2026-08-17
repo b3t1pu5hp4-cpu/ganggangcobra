@@ -110,25 +110,40 @@ export default function RoomPage() {
   }, [mediaStream, phase]);
 
   const captureFrame = useCallback(async () => {
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext("2d");
+    const canvas = canvasRef.current || document.createElement("canvas");
     canvas.width = 480;
     canvas.height = 560;
-    if (camReady && videoRef.current) {
-      ctx.filter = filter.css;
+    const ctx = canvas.getContext("2d");
+    const video = videoRef.current;
+
+    const hasVideo = video && (video.readyState >= 2 || video.videoWidth > 0);
+
+    if (hasVideo) {
       ctx.save();
+      if (filter?.css && filter.css !== "none") {
+        ctx.filter = filter.css;
+      }
       ctx.translate(canvas.width, 0);
       ctx.scale(-1, 1);
-      ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
       ctx.restore();
+      if (typeof drawFilterOverlay === "function" && filter?.overlay) {
+        drawFilterOverlay(ctx, filter.overlay, canvas.width, canvas.height);
+      }
     } else {
-      ctx.fillStyle = "#171310";
+      ctx.fillStyle = "#221c17";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = "#e0c9a6";
+      ctx.font = "24px sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText("📷 No Signal", canvas.width / 2, canvas.height / 2);
     }
-    const dataUrl = canvas.toDataURL("image/jpeg", 0.85);
-    const blob = await (await fetch(dataUrl)).blob();
+
+    const dataUrl = canvas.toDataURL("image/jpeg", 0.92);
+    const res = await fetch(dataUrl);
+    const blob = await res.blob();
     return { dataUrl, blob };
-  }, [camReady, filter]);
+  }, [filter]);
 
   // realtime channel: presence (who's in the room + ready state) + broadcast (round sync)
   useEffect(() => {
@@ -375,7 +390,7 @@ export default function RoomPage() {
 
           <div className="w-full max-w-sm mt-5">
             <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
-              {FILTERS.map((f) => (
+              {(FILTERS || []).map((f) => (
                 <button
                   key={f.id}
                   onClick={() => setFilter(f)}
