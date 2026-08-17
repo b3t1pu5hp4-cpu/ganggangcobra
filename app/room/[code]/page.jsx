@@ -1,3 +1,29 @@
+
+function drawFilterOverlay(ctx, overlayType, width, height) {
+  if (!overlayType) return;
+  ctx.save();
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  const emojiFont = "sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji"";
+
+  if (overlayType === "dog") {
+    ctx.font = Math.round(width * 0.28) + "px " + emojiFont;
+    ctx.fillText("🐶", width * 0.5, height * 0.22);
+    ctx.font = Math.round(width * 0.16) + "px " + emojiFont;
+    ctx.fillText("👅", width * 0.5, height * 0.65);
+  } else if (overlayType === "fox") {
+    ctx.font = Math.round(width * 0.28) + "px " + emojiFont;
+    ctx.fillText("🦊", width * 0.5, height * 0.22);
+  } else if (overlayType === "hearts") {
+    ctx.font = Math.round(width * 0.18) + "px " + emojiFont;
+    ctx.fillText("👑 💖 👑", width * 0.5, height * 0.18);
+  } else if (overlayType === "cool") {
+    ctx.font = Math.round(width * 0.32) + "px " + emojiFont;
+    ctx.fillText("🕶️", width * 0.5, height * 0.42);
+  }
+  ctx.restore();
+}
+
 "use client";
 
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
@@ -418,7 +444,7 @@ export default function RoomPage() {
         <Centered>
           <Stamp className="mb-1">The memory has been developed.</Stamp>
           <h2 className="font-display text-2xl mb-6">Gang Cobra Strip</h2>
-          <img src={finalStripUrl} alt="Gang Cobra strip" className="w-56 shadow-[0_20px_60px_rgba(0,0,0,0.5)] rotate-[-1deg]" />
+          <img src={finalStripUrl} alt="Gang Cobra strip" className="w-full max-w-md shadow-[0_20px_60px_rgba(0,0,0,0.5)] rotate-[-1deg]" />
           <div className="flex gap-2 mt-6 overflow-x-auto no-scrollbar max-w-sm">
             {STRIP_THEMES.map((t) => (
               <button
