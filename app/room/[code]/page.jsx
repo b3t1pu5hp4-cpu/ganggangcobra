@@ -510,7 +510,13 @@ export default function RoomPage() {
         <Centered>
           <Stamp className="mb-1">The memory has been developed.</Stamp>
           <h2 className="font-display text-2xl mb-6">Gang Cobra Strip</h2>
-          <img src={finalStripUrl} alt="Gang Cobra strip" className="w-full max-w-md shadow-[0_20px_60px_rgba(0,0,0,0.5)] rotate-[-1deg]" />
+          <div className="w-full max-w-full overflow-x-auto pb-4 pt-1 flex justify-center">
+        <img
+          src={finalStripUrl}
+          alt="Gang Cobra strip"
+          className="min-w-[580px] max-w-full shadow-[0_20px_60px_rgba(0,0,0,0.6)] rounded-sm"
+        />
+      </div>
           <div className="flex gap-2 mt-6 overflow-x-auto no-scrollbar max-w-sm">
             {STRIP_THEMES.map((t) => (
               <button
